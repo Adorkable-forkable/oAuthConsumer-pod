@@ -53,8 +53,12 @@ static NSString *Boundary = @"-----------------------------------0xCoCoaouTHeBou
     
     for (NSString *encodedPair in encodedParameterPairs) {
         NSArray *encodedPairElements = [encodedPair componentsSeparatedByString:@"="];
-        OARequestParameter *parameter = [[OARequestParameter alloc] initWithName:[[encodedPairElements objectAtIndex:0] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]
-                                                                           value:[[encodedPairElements objectAtIndex:1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        
+         NSString *name = [[encodedPairElements objectAtIndex:0] stringByRemovingPercentEncoding];
+         NSString *value = [[encodedPairElements objectAtIndex:1] stringByRemovingPercentEncoding];
+         OARequestParameter *parameter = [[OARequestParameter alloc] initWithName:name
+         value:value];
+         
         [requestParameters addObject:parameter];
     }
     

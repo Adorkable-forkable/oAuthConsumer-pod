@@ -29,31 +29,17 @@
 @implementation NSString (OAURLEncodingAdditions)
 
 - (NSString *)encodedURLString {
-	NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-                                                                           (CFStringRef)self,
-                                                                           NULL,                   // characters to leave unescaped (NULL = all escaped sequences are replaced)
-                                                                           CFSTR("?=&+"),          // legal URL characters to be escaped (NULL = all legal characters are replaced)
-                                                                           kCFStringEncodingUTF8)); // encoding
-	return result;
+    NSCharacterSet *allowedCharacters = [ [NSCharacterSet characterSetWithCharactersInString:@"?=&+%"] invertedSet];
+    return [self stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
 }
 
 - (NSString *)encodedURLParameterString {
-    NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-                                                                           (CFStringRef)self,
-                                                                           NULL,
-                                                                           CFSTR(":/=,!$&'()*+;[]@#?"),
-                                                                           kCFStringEncodingUTF8));
-	return result;
+    NSCharacterSet *allowedCharacters = [ [NSCharacterSet characterSetWithCharactersInString:@":/=,!$&'()*+;[]@#? "] invertedSet];
+    return [self stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
 }
 
 - (NSString *)decodedURLString {
-	NSString *result = (NSString*)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
-																						  (CFStringRef)self,
-																						  CFSTR(""),
-																						  kCFStringEncodingUTF8));
-	
-	return result;
-	
+    return [self stringByRemovingPercentEncoding];
 }
 
 -(NSString *)removeQuotes
