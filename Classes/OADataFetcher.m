@@ -33,7 +33,6 @@
 
 - (id)init {
 	if ((self = [super init])) {
-		responseData = [[NSMutableData alloc] init];
 	}
 	return self;
 }
@@ -41,18 +40,12 @@
 - (void)dealloc {
 }
 
-/* Protocol for async URL loading */
-- (void)connection:(NSURLConnection *)aConnection didReceiveResponse:(NSURLResponse *)aResponse {
-	response = aResponse;
-	[responseData setLength:0];
-}
 
-
-- (void)connection:(NSURLConnection *)aConnection didFailWithError:(NSError *)error
+- (void)didFailWithError:(NSError *)error withData:(NSData *)data
 {
 	OAServiceTicket *ticket = [[OAServiceTicket alloc] initWithRequest:request
 															  response:response
-																  data:responseData
+																  data:data
 															didSucceed:NO];
 
 	if ( delegate )
@@ -62,21 +55,16 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-	[responseData appendData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)didFinishLoadingWithData:(NSData *)data {
 	OAServiceTicket *ticket = [[OAServiceTicket alloc] initWithRequest:request
 															  response:response
-																  data:responseData
+																  data:data
 															didSucceed:[(NSHTTPURLResponse *)response statusCode] < 400];
 
 	if ( delegate )
-		[delegate performSelector:didFinishSelector withObject:ticket withObject:responseData];
+		[delegate performSelector:didFinishSelector withObject:ticket withObject:data];
 	else if (handler )
-		handler(ticket, responseData, nil);
+		handler(ticket, data, nil);
 }
 
 
@@ -92,8 +80,17 @@
     didFailSelector = failSelector;
     
     [request prepare];
-
-	connection = [[NSURLConnection alloc] initWithRequest:aRequest delegate:self];
+    
+    NSURLSession *session = [NSURLSession sharedSession];
+    connectionTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        if (error != nil) {
+            [self didFinishLoadingWithData:data];
+        } else {
+            [self didFailWithError:error withData:data];
+        }
+    }];
+    [connectionTask resume];
 }
 
 
@@ -105,6 +102,15 @@
 	
 	[request prepare];
 	
-	connection = [[NSURLConnection alloc] initWithRequest:aRequest delegate:self];
+    NSURLSession *session = [NSURLSession sharedSession];
+    connectionTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        if (error != nil) {
+            [self didFinishLoadingWithData:data];
+        } else {
+            [self didFailWithError:error withData:data];
+        }
+    }];
+    [connectionTask resume];
 }
 @end

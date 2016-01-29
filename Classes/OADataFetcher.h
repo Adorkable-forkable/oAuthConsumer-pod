@@ -34,8 +34,7 @@ typedef void (^OADataFetcherCompletedHandler) (OAServiceTicket *ticket, NSData *
 @private
     OAMutableURLRequest *request;
     NSURLResponse *response;
-    NSURLConnection *connection;
-    NSMutableData *responseData;
+    NSURLSessionDataTask *connectionTask;
     id delegate;
     SEL didFinishSelector;
     SEL didFailSelector;
